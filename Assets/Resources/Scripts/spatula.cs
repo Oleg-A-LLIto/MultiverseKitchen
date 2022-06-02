@@ -2,22 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
+using Valve.VR;
 
 public class spatula : MonoBehaviour
 {
     enum mode { cut, spat };
-    mode m = mode.cut;
+    mode m = mode.spat;
     Hand holding;
-    public GameObject razor1;
-    public GameObject razor2;
-    public GameObject picker;
-    Valve.VR.SteamVR_Skeleton_Poser poser;
-    public Valve.VR.SteamVR_Skeleton_Pose pose1;
-    public Valve.VR.SteamVR_Skeleton_Pose pose2;
+    [SerializeField] GameObject razor1;
+    [SerializeField] GameObject razor2;
+    [SerializeField] GameObject picker;
+    [SerializeField] Transform rotatable;
+    Hand[] allHands = new Hand[2];
+    
     // Start is called before the first frame update
     void Start()
     {
-        poser = GetComponent<Valve.VR.SteamVR_Skeleton_Poser>();
+        allHands = FindObjectsOfType<Hand>();
+    }
+
+    Hand getOtherHand(Hand a) {
+        if (allHands[0] == a)
+        {
+            return allHands[1];
+        }
+        else
+        {
+            return allHands[0];
+        }
     }
 
     public void CheckMode()
@@ -25,7 +37,17 @@ public class spatula : MonoBehaviour
         holding = GetComponent<Interactable>().attachedToHand;
         if(holding != null)
         {
-            if (holding.IsGrabbingWithType(GrabTypes.Grip))
+            Hand other = getOtherHand(holding);
+            Debug.Log(other);
+            if (other.currentAttachedObject == null)
+            {
+                if (m != mode.spat)
+                {
+                    StartCoroutine(GotoSpat());
+                }
+                return;
+            }
+            if (other.currentAttachedObject.TryGetComponent<cuttable>(out _))
             {
                 if (m != mode.cut)
                 {
@@ -44,33 +66,33 @@ public class spatula : MonoBehaviour
 
     IEnumerator GotoKnife()
     {
-        float initangle = transform.rotation.eulerAngles.z;
+        float initangle = rotatable.rotation.eulerAngles.z;
         m = mode.cut;
-        for(float i = 0; i < 1; i += Time.deltaTime*2)
+        for (float i = 0; i < 1; i += Time.deltaTime*2)
         {
-            //transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(initangle, initangle + 90, i));
+            rotatable.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(0, -90, i));
             yield return 0;
         }
+        rotatable.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, -90);
         picker.SetActive(false);
         razor1.SetActive(true);
         razor2.SetActive(true);
-        //poser.skeletonMainPose = pose2;
         yield return 0;
     }
 
     IEnumerator GotoSpat()
     {
-        float initangle = transform.rotation.eulerAngles.z;
+        float initangle = rotatable.rotation.eulerAngles.z;
         m = mode.spat;
         for (float i = 0; i < 1; i += Time.deltaTime * 2)
         {
-            //transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(initangle, initangle - 90, i));
+            rotatable.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(-90, 0, i));
             yield return 0;
         }
+        rotatable.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0);
         picker.SetActive(true);
         razor1.SetActive(false);
         razor2.SetActive(false);
-        //poser.skeletonMainPose = pose1;
         yield return 0;
     }
 

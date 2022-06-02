@@ -3,26 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 
+[RequireComponent(typeof(AudioSource))]
 public class Rating : MonoBehaviour
 {
     public string category;
-    public GameObject plate;
-    public GameObject RUI;
-    public GameObject star;
-    public Text cooking_rating;
-    public Text proportions_rating;
-    public Text order_rating;
-    public Text speed_rating;
+    [SerializeField] GameObject plate;
+    [SerializeField] GameObject RUI;
+    [SerializeField] GameObject star;
+    [SerializeField] UnityEvent ratingFunction;
+    public Text[] rating;
     public Text total_rating;
     public AudioClip tally;
     public AudioClip nice;
     public AudioClip ding;
     AudioSource AS;
-    float cooking = 0;
-    float proportions = 0;
-    float order = 0;
-    float speed = 0;
+    public float[] score;
     float total = 0;
     bool mutex = false;
     bool done = false;
@@ -34,7 +31,7 @@ public class Rating : MonoBehaviour
 
     public void FriedRating(float bottom, float overall, float top)
     {
-        cooking = (RateFriedness(bottom) + RateFriedness(overall) + RateFriedness(top)) / 3;
+        score[0] = (RateFriedness(bottom) + RateFriedness(overall) + RateFriedness(top)) / 3;
     }
 
     public void PlaySound(AudioClip sound)
@@ -53,27 +50,49 @@ public class Rating : MonoBehaviour
                 return;
             }
             mutex = true;
-            float time = Time.timeSinceLevelLoad;
-            if (time < 120)
-            {
-                speed = 100;
-            }
-            else
-            {
-                speed = 120 / time * 100;
-            }
-            plate.GetComponent<CalculateIngredients>().Calc(out order, out proportions);
             RUI.SetActive(true);
-            order = Mathf.Sqrt(order);
-            if (proportions < 45)
-            {
-                order = 0;
-                proportions = 0;
-                speed = 0;
-                cooking = 0;
-            }
+            ratingFunction.Invoke();
             StartCoroutine(ScoreAnimation());
         }
+    }
+
+    public void RateBurger()
+    {
+        float time = Time.timeSinceLevelLoad;
+        if (time < 120)
+        {
+            score[3] = 100;
+        }
+        else
+        {
+            score[3] = 120 / time * 100;
+        }
+        plate.GetComponent<CalculateIngredients>().Calc(out score[2], out score[1]);
+        score[2] = 100 * Mathf.Sqrt(score[2]/100);
+        if (score[1] < 45)
+        {
+            for (int i = 0; i < score.Length; i++)
+                score[i] = 0;
+        }
+    }
+
+    public void RateCake()
+    {
+        float time = Time.timeSinceLevelLoad;
+        if (time < 240)
+        {
+            score[4] = 100;
+        }
+        else
+        {
+            score[4] = 240 / time * 100;
+        }
+        bakeableLiquidDough dough = FindObjectOfType<bakeableLiquidDough>();
+        dippable glaze = FindObjectOfType<dippable>();
+        score[0] = dough.quality * 100;
+        score[1] = (1 - Mathf.Abs(1.05f - dough.bakingProgress)) * 100;
+        score[2] = glaze.quality * 100;
+        score[3] = glaze.countSprinkles()/(FindObjectsOfType<spinklesStick>().Length) * 100;
     }
 
     IEnumerator ScoreAnimation()
@@ -86,23 +105,21 @@ public class Rating : MonoBehaviour
         PlaySound(tally); 
         for(float i = 0; i < 1; i += 2 * Time.deltaTime)
         {
-            cooking_rating.text = Mathf.RoundToInt(Mathf.Lerp(0, cooking, i)) + "%";
-            proportions_rating.text = Mathf.RoundToInt(Mathf.Lerp(0, proportions, i)) + "%";
-            order_rating.text = Mathf.RoundToInt(Mathf.Lerp(0, order, i)) + "%";
-            speed_rating.text = Mathf.RoundToInt(Mathf.Lerp(0, speed, i)) + "%";
+            for (int j = 0; j < score.Length; j++)
+                rating[j].text = Mathf.RoundToInt(Mathf.Lerp(0, score[j], i)) + "%";
             yield return 0;
         }
-        cooking_rating.text = Mathf.RoundToInt(cooking) + "%";
-        proportions_rating.text = Mathf.RoundToInt(proportions) + "%";
-        order_rating.text = Mathf.RoundToInt(order) + "%";
-        speed_rating.text = Mathf.RoundToInt(speed) + "%";
+        for (int i = 0; i < score.Length; i++)
+            rating[i].text = Mathf.RoundToInt(score[i]) + "%";
         PlaySound(ding);
         while (AS.isPlaying)
         {
             yield return 0;
         }
         PlaySound(tally);
-        total = (cooking + proportions + order + speed) / 4;
+        for (int i = 0; i < score.Length; i++)
+            total += score[i];
+        total /= score.Length;
         for (float i = 0; i < 1; i += 2 * Time.deltaTime)
         {
             total_rating.text = Mathf.RoundToInt(Mathf.Lerp(0, total, i)) + "%";

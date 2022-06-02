@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
+[RequireComponent(typeof(kinematicAccelerometer))]
 public class WholeEgg : MonoBehaviour
 {
     [SerializeField]
@@ -10,10 +11,11 @@ public class WholeEgg : MonoBehaviour
     [SerializeField]
     GameObject crackedEgg;
     bool alreadyCracked = false;
-    // Start is called before the first frame update
+    kinematicAccelerometer accelerometer;
+
     void Start()
     {
-        
+        accelerometer = GetComponent<kinematicAccelerometer>();
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -22,7 +24,7 @@ public class WholeEgg : MonoBehaviour
         {
             return;
         }
-        if (collision.relativeVelocity.magnitude > terminalVelocity)
+        if (collision.relativeVelocity.magnitude > terminalVelocity || accelerometer.velocity > terminalVelocity*500)
         {
             alreadyCracked = true;
             Debug.Log("Egg cracked");

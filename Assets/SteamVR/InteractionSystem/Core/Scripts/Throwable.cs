@@ -7,6 +7,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 namespace Valve.VR.InteractionSystem
 {
@@ -54,7 +55,6 @@ namespace Valve.VR.InteractionSystem
 		public UnityEvent onPickUp;
         public UnityEvent onDetachFromHand;
         public HandEvent onHeldUpdate;
-        public Hand holdinghand;
 
 
         protected RigidbodyInterpolation hadInterpolation = RigidbodyInterpolation.None;
@@ -141,8 +141,6 @@ namespace Valve.VR.InteractionSystem
 		{
             //Debug.Log("<b>[SteamVR Interaction]</b> Pickup: " + hand.GetGrabStarting().ToString());
 
-            holdinghand = hand;
-
             hadInterpolation = this.rigidbody.interpolation;
 
             attached = true;
@@ -167,9 +165,7 @@ namespace Valve.VR.InteractionSystem
         protected virtual void OnDetachedFromHand(Hand hand)
         {
             attached = false;
-
-            holdinghand = null;
-
+            
             onDetachFromHand.Invoke();
 
             hand.HoverUnlock(null);
@@ -183,6 +179,7 @@ namespace Valve.VR.InteractionSystem
 
             rigidbody.velocity = velocity;
             rigidbody.angularVelocity = angularVelocity;
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
         }
 
 

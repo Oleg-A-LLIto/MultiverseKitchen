@@ -51,6 +51,7 @@ public class Puddle : MonoBehaviour
                     }
                 }
             }
+            /*
             if (other.TryGetComponent<Rigidbody>(out Rigidbody a) && a.isKinematic)
             {
                 if(!TryGetComponent<ConfigurableJoint>(out _))
@@ -69,6 +70,7 @@ public class Puddle : MonoBehaviour
                     fj.zMotion = ConfigurableJointMotion.Locked;
                 }
             }
+            */
         }
     }
 

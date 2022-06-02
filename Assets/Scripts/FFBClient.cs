@@ -33,4 +33,5 @@ public class FFBClient : MonoBehaviour
             _ffbManager.RelaxForceFeedback(hand);
         }
     }
+
 }

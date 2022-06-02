@@ -10,6 +10,7 @@ public class CalculateIngredients : MonoBehaviour
     List<Connectable> allowed_connections;
     public Dictionary<string, float> stuff;
     public Dictionary<string, float> norms;
+
     public void Calc(out float rating, out float proportions)
     {
         rating = 100;
@@ -30,31 +31,20 @@ public class CalculateIngredients : MonoBehaviour
             {
                 stuff.Add(sb.type, sb.amount);
             }
-            //Debug.Log(sb.type + ": "+ stuff[sb.type]);
         }
         foreach (string tp in norms.Keys)
         {
             if (stuff.ContainsKey(tp))
             {
                 proportions += 9 * Mathf.Min(stuff[tp], norms[tp]) / Mathf.Max(stuff[tp], norms[tp]);
-                //Debug.Log(tp + ": " + (9 * Mathf.Max(stuff[tp], norms[tp]) / Mathf.Min(stuff[tp], norms[tp])));
             }
             
         }
         int wrong = 0;
         foreach (IngredsConnection ic in connections)
         {
-            Debug.Log(ic.first.type + " and " + ic.second.type);
-            if(allowed_connections.Any(x => x.first == ic.first.type && x.second == ic.second.type))
-            {
-                Debug.Log("allowed");
-            }
-            else
-            {
-                Debug.Log("forbidden");
+            if(!allowed_connections.Any(x => x.first == ic.first.type && x.second == ic.second.type))
                 wrong += 1;
-                Debug.Log("score is now " + rating);
-            }
         }
         rating -= wrong / 3 / connections.Count();
     }

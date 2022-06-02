@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
+[RequireComponent(typeof(kinematicAccelerometer))]
 public class bottle_squishable : MonoBehaviour
 {
     enum mode { squish, initial };
@@ -13,10 +14,13 @@ public class bottle_squishable : MonoBehaviour
     public Valve.VR.SteamVR_Skeleton_Pose pose2;
     public Transform bottleneck;
     public GameObject droplet;
+    kinematicAccelerometer accelerometer;
+
     // Start is called before the first frame update
     void Start()
     {
         poser = GetComponent<Valve.VR.SteamVR_Skeleton_Poser>();
+        accelerometer = GetComponent<kinematicAccelerometer>();
     }
 
     private void Update()
@@ -24,12 +28,18 @@ public class bottle_squishable : MonoBehaviour
         CheckMode();
     }
 
+    private void FixedUpdate()
+    {
+        
+    }
+
     public void CheckMode()
     {
         holding = GetComponent<Interactable>().attachedToHand;
         if (holding != null)
         {
-            if (holding.IsGrabbingWithType(GrabTypes.Grip))
+            //(holding.IsGrabbingWithType(GrabTypes.Grip))
+            if ((accelerometer.acceleration < -0.002) && (Vector3.Angle(Vector3.up,transform.forward*-1) < 60) && (Vector3.Angle(accelerometer.velocityVector, transform.forward) < 30))
             {
                 if (m != mode.squish)
                 {

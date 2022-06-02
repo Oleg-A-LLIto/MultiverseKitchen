@@ -22,7 +22,7 @@ public class liquidReservoir : MonoBehaviour
     [SerializeField] Renderer liquidRenderer;
     [SerializeField] string[] initialIngredients;
     [SerializeField] float[] ingredientRatios;
-    Dictionary<string,float> ingredients;
+    public Dictionary<string, float> ingredients { get; private set; }
     Vector3 initialCatcherPosition;
     Vector3 initialCatcherScale;
     float pourAngleCurrent;
@@ -40,6 +40,26 @@ public class liquidReservoir : MonoBehaviour
         {
             ingredients[initialIngredients[i]] = ingredientRatios[i];
         }
+    }
+    
+    public float compareContents(Dictionary<string, float> ISO)
+    {
+        float totalError = 0;
+        foreach (string Key in ISO.Keys.ToList())
+        {
+            if (ingredients.ContainsKey(Key))
+            {
+                float maxError = Mathf.Max(ISO[Key], 1 - ISO[Key]);
+                float error = Mathf.Abs(ISO[Key] - ingredients[Key])/maxError;
+                totalError += error;
+            }
+            else
+            {
+                totalError += 1;
+            }
+        }
+        totalError /= ISO.Count();
+        return (1 - totalError);
     }
 
     public void addLiquid(string ingredientType, float vol)
@@ -90,10 +110,6 @@ public class liquidReservoir : MonoBehaviour
             //Calculating ejection point
             Quaternion rotationNoY = Quaternion.Euler(transform.up);
             Vector3 dir = (rotationNoY * Vector3.ProjectOnPlane(transform.up, Vector3.up)).normalized;
-
-            //float pouringDirectionY = Quaternion.LookRotation(dir).eulerAngles.y;  
-            //sourceRotor.transform.rotation = Quaternion.Euler(-90, pouringDirectionY, 0);
-
             Vector3 ejectionPoint = (Vector3.ProjectOnPlane(dir, transform.up)).normalized * reservoirRadius;
 
             if (tiltAngle > 90) ejectionPoint *= -1;

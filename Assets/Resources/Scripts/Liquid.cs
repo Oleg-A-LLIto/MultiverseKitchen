@@ -5,8 +5,8 @@ using UnityEngine;
 public class Liquid : MonoBehaviour
 {
     public string type;
-    public GameObject ownPuddle;
-    // Start is called before the first frame update
+    [SerializeField] GameObject ownPuddle;
+
     void Start()
     {
         
